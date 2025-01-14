@@ -1,0 +1,112 @@
+.\" Manpage for fillfs
+.\" Contact: Robert Heffernan
+.\" License: MIT
+.\" Date: 14th January 2025
+.TH fillfs 1 "14 Jan 2025" "fillfs Utility" "User Commands"
+.SH NAME
+fillfs \- fill a filesystem until a specified size is reached or the disk is full
+.SH SYNOPSIS
+.B fillfs
+[\fB-r\fR | \fB--random\fR]
+[\fB-z\fR | \fB--zero\fR]
+[\fB-s\fR | \fB--status\fR]
+[\fB-b\fR | \fB--block-size\fR=SIZE]
+[\fB-h\fR | \fB--help\fR]
+.I <mount_point> [size]
+
+.SH DESCRIPTION
+The
+.B fillfs
+utility creates a hidden file (by default,
+.BR /.fillfs )
+on the specified
+.I <mount_point>
+and writes data to it until either:
+.RS
+.IP \[bu] 2
+The provided size (if specified) is reached.
+.IP \[bu] 2
+The disk is full (if no size is specified).
+.RE
+
+By default, it writes zeroed data, but can optionally write random data. It can print status updates (progress, ETA, throughput) if requested. Once the target size or an out-of-space error occurs, the file is removed automatically.
+
+.SH OPTIONS
+.TP
+\fB-r, --random\fR
+Write random data instead of zeroed data.
+
+.TP
+\fB-z, --zero\fR
+Explicitly write zeroed data (overrides --random if both are used).
+
+.TP
+\fB-s, --status\fR
+Show periodic status updates, including throughput and estimated time remaining (ETA).
+
+.TP
+\fB-b, --block-size=SIZE\fR
+Use a custom block size for writes. Defaults to \fB32M\fR if not specified. Must be a valid size in bytes or with suffix (K, M, G, etc.).
+
+.TP
+\fB-h, --help\fR
+Show a help message and exit.
+
+.SH ARGUMENTS
+.TP
+\fI<mount_point>\fR
+Required. The path to the filesystem mount point on which to create the hidden file (e.g. \fB/\fR or \fB/mnt/data\fR).
+
+.TP
+\fIsize\fR
+Optional. Human-readable size for the fill operation (e.g., \fB1G\fR, \fB800M\fR, \fB32K\fR). If not provided, fillfs continues until the filesystem is full (\fBENOSPC\fR).
+
+.SH EXAMPLES
+.TP
+Fill 1 GB on the root filesystem, showing status updates:
+.RS
+.nf
+fillfs / --status 1G
+.fi
+.RE
+
+.TP
+Fill until the disk is completely full at \fB/mnt/data\fR with zero data:
+.RS
+.nf
+fillfs /mnt/data
+.fi
+.RE
+
+.TP
+Use random data for 10 GB with a custom 4M block size:
+.RS
+.nf
+fillfs -r -s -b 4M /mnt/data 10G
+.fi
+.RE
+
+.SH FILES
+In normal operation, fillfs creates a hidden file named
+.B /.fillfs
+in the specified mount point. This file is removed automatically upon successful or error exit (unless the program is forcibly killed in a way that bypasses cleanup).
+
+.SH EXIT STATUS
+.TP
+0
+Success.
+.TP
+Non-zero
+An error occurred or the program was interrupted.
+
+.SH AUTHOR
+Robert Heffernan <robert@heffernantech.au>
+
+.SH COPYRIGHT AND LICENSE
+Licensed under the MIT License.
+.PP
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+.PP
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+.PP
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

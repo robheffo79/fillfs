@@ -1,0 +1,24 @@
+name: fillfs
+version: '1.0'
+summary: A tool to fill the filesystem until a specified size or disk full
+description: |
+  fillfs creates a hidden file on a specified mount point (/.fillfs) and writes
+  data to it until a specified size is reached or the disk is full.
+
+grade: stable
+confinement: strict  # or devmode if you're just testing
+
+apps:
+  fillfs:
+    command: fillfs
+
+parts:
+  fillfs:
+    plugin: make
+    source: .
+    # If you don't have a Makefile, you can use plugin: nil or plugin: dump with override-build
+    # but this example uses your existing Makefile that compiles fillfs.c
+    build-packages:
+      - build-essential
+    stage-packages:
+      - man-db  # if you want the man page to be included & accessible inside the snap
