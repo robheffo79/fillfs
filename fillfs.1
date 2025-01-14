@@ -4,7 +4,7 @@
 .\" Date: 14th January 2025
 .TH fillfs 1 "14 Jan 2025" "fillfs Utility" "User Commands"
 .SH NAME
-fillfs \- fill a filesystem until a specified size is reached or the disk is full
+fillfs \- fill a filesystem or overwrite a file until a specified size is reached or the disk is full
 .SH SYNOPSIS
 .B fillfs
 [\fB-r\fR | \fB--random\fR]
@@ -12,24 +12,30 @@ fillfs \- fill a filesystem until a specified size is reached or the disk is ful
 [\fB-s\fR | \fB--status\fR]
 [\fB-b\fR | \fB--block-size\fR=SIZE]
 [\fB-h\fR | \fB--help\fR]
-.I <mount_point> [size]
+.I <mount_point_or_file> [size]
 
 .SH DESCRIPTION
 The
 .B fillfs
-utility creates a hidden file (by default,
-.BR /.fillfs )
-on the specified
-.I <mount_point>
-and writes data to it until either:
-.RS
-.IP \[bu] 2
-The provided size (if specified) is reached.
-.IP \[bu] 2
-The disk is full (if no size is specified).
-.RE
+utility behaves differently depending on whether
+.I <mount_point_or_file>
+refers to a directory or an existing file:
 
-By default, it writes zeroed data, but can optionally write random data. It can print status updates (progress, ETA, throughput) if requested. Once the target size or an out-of-space error occurs, the file is removed automatically.
+.IP \(bu 4
+If it is **a directory**, fillfs creates a hidden file (by default
+.BR /.fillfs )
+in that directory and writes data to it until either the disk is filled or a specified size is reached.  
+In this mode, if fillfs terminates normally or via most signals, the hidden file is automatically removed.  
+However, if forcibly killed with \fBkill -9\fR (\fBSIGKILL\fR), fillfs cannot clean up.
+
+.IP \(bu 4
+If it is **an existing file**, fillfs overwrites that file in-place without removing it afterward.  
+Optionally, you may specify a \fIsize\fR argument: if no size is given (or \fBSIZE_MAX\fR in code), the entire file is overwritten.  
+If a size larger than the file is specified, fillfs overwrites only up to the file's actual size.  
+If forcibly killed, no further writes occur and no cleanup is attempted on the file itself.
+
+By default, fillfs writes zeroed data, but it can write random data (\fB--random\fR).  
+It can also print status updates (progress, ETA, throughput) when \fB--status\fR is provided.
 
 .SH OPTIONS
 .TP
@@ -38,7 +44,7 @@ Write random data instead of zeroed data.
 
 .TP
 \fB-z, --zero\fR
-Explicitly write zeroed data (overrides --random if both are used).
+Explicitly write zeroed data (overrides \fB--random\fR if both are used).
 
 .TP
 \fB-s, --status\fR
@@ -46,7 +52,8 @@ Show periodic status updates, including throughput and estimated time remaining 
 
 .TP
 \fB-b, --block-size=SIZE\fR
-Use a custom block size for writes. Defaults to \fB32M\fR if not specified. Must be a valid size in bytes or with suffix (K, M, G, etc.).
+Use a custom block size for writes. Defaults to \fB32M\fR if not specified.  
+The argument may include a suffix (e.g., \fB4K\fR, \fB32M\fR, \fB1G\fR, etc.).
 
 .TP
 \fB-h, --help\fR
@@ -54,12 +61,16 @@ Show a help message and exit.
 
 .SH ARGUMENTS
 .TP
-\fI<mount_point>\fR
-Required. The path to the filesystem mount point on which to create the hidden file (e.g. \fB/\fR or \fB/mnt/data\fR).
+\fI<mount_point_or_file>\fR
+Required. A directory path (e.g. \fB/\fR or \fB/mnt/data\fR) or an existing file path (\fB/tmp/existing_file\fR).  
+If a directory is specified, fillfs creates a hidden file (/.fillfs) which is automatically removed upon exit (except if forcibly killed).  
+If an existing file is specified, fillfs overwrites data in that file and does not remove it.
 
 .TP
 \fIsize\fR
-Optional. Human-readable size for the fill operation (e.g., \fB1G\fR, \fB800M\fR, \fB32K\fR). If not provided, fillfs continues until the filesystem is full (\fBENOSPC\fR).
+Optional. Human-readable size for the fill or overwrite operation (e.g., \fB1G\fR, \fB800M\fR, \fB32K\fR).  
+If not provided and a directory is used, fillfs continues until the filesystem is full (\fBENOSPC\fR).  
+If not provided and a file is used, fillfs overwrites the entire file.
 
 .SH EXAMPLES
 .TP
@@ -86,10 +97,20 @@ fillfs -r -s -b 4M /mnt/data 10G
 .fi
 .RE
 
+.TP
+Overwrite an existing file up to 500 MB (without removing it):
+.RS
+.nf
+fillfs /tmp/existing_file 500M
+.fi
+.RE
+
 .SH FILES
-In normal operation, fillfs creates a hidden file named
+In directory mode, fillfs creates a hidden file named
 .B /.fillfs
-in the specified mount point. This file is removed automatically upon successful or error exit (unless the program is forcibly killed in a way that bypasses cleanup).
+in the specified directory.  
+This file is removed automatically upon a normal or signal-induced exit (other than \fBSIGKILL\fR).  
+If a regular file is specified, fillfs uses and overwrites that file directly, leaving it in place after completion.
 
 .SH EXIT STATUS
 .TP
