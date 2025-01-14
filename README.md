@@ -1,7 +1,7 @@
 
 # fillfs
 
-`fillfs` is a utility designed to fill a filesystem with data up to a specified size or until the disk is full. It creates a hidden file (`/.fillfs`) on the target filesystem and writes data to it. This tool is useful for testing storage behavior, monitoring disk performance, or ensuring specific storage conditions are met.
+`fillfs` is a utility designed to fill a filesystem with data up to a specified size or until the disk is full. It creates a temporary file on the target filesystem and writes data to it. This tool is useful for testing storage behavior, monitoring disk performance, or ensuring empty space is zeroed.
 
 ## Features
 
